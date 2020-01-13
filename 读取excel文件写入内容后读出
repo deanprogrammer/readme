@@ -1,0 +1,33 @@
+try {
+			InputStream inputStream = new FileInputStream(new File("C:\\Users\\V007\\Desktop\\附件1 货物清单.xlsx"));
+			byte[] fileByte = IOUtils.toByteArray(inputStream);
+			ExcelUtil excelUtil = new ExcelUtil(new ByteArrayInputStream(fileByte), 0);
+			XSSFWorkbook workbook = excelUtil.getWorkBook();
+			ByteArrayOutputStream prodOutputStream = new ByteArrayOutputStream();
+			for (int i = 0; i < workbook.getNumberOfSheets()-1; i++) {
+				XSSFSheet sheet = workbook.getSheetAt(i);//获取sheet
+				XSSFRow row=sheet.getRow(maxNum); 
+				row=sheet.createRow((short)(sheet.getLastRowNum()+1)); //在现有行号后追加数据  
+				row.createCell(1).setCellValue("合制(盖章)"); 
+				workbook.setPrintArea(i, 0, sheet.getRow(2).getLastCellNum()-1, 0, maxNum+1);
+				
+				Footer footer = sheet.getFooter();//页脚
+				footer.setRight(HSSFFooter.font("宋体", "")+HSSFFooter.fontSize((short)10)+"合制(盖章)");
+			}
+			workbook.write(prodOutputStream);
+			byte[] aaa = prodOutputStream.toByteArray();
+			
+			File newfile = new File("C:\\Users\\V007\\Desktop\\附件1 货物清单(审批)1002.xlsx");
+			FileOutputStream fos = new FileOutputStream(newfile);
+			for(int i =0;i<aaa.length;i++) {
+				fos.write(aaa[i]);
+				fos.flush();
+			}
+			fos.close();
+			System.out.println(aaa.length);
+			System.out.println("OK");
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
