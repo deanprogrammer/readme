@@ -10,3 +10,61 @@ List<String> corpIds = acCorpInfoList.stream().map(AcCorpInfo :: getCorpId).dist
 Map<String, String> findMap = findExistingAttention.stream().collect(Collectors.toMap(AcRiskAttention::getCustId, AcRiskAttention::getAttentionInfoNo));
 6.//List<Map<String, Object>> ResultData
 List<String> esIdList esIdList = outputBean.getResultData().stream().map(p->String.valueOf(p.get("esId"))).collect(Collectors.toList());
+/*****************************************************/
+排序
+
+/**
+	 * 排序：价格_销量_类目_上架时间 升序：1 降序：2 如：0_1_0_0 表示销量升序
+	 *
+	 * @param listData
+	 * @param sort
+	 */
+	private void sortData(List<ProdSelectResultBean> listData, String sort, String priceType, String upOrDown) {
+		String[] sortArr = sort.split(ProductConstant.UNDERLINE);
+		if (sortArr == null || sortArr.length == 0) {
+			return;
+		}
+		for (int i = 0; i < sortArr.length; i++) {
+			if (i == 0) {// 价格
+				if (ProductConstant.PRICE_TYPE.PRICE_TYPE_A.equals(priceType)) {
+					if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getMinPriceA().compareTo(h2.getMinPriceA()));
+					} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getMaxPriceA().compareTo(h1.getMaxPriceA()));
+					}
+				} else if (ProductConstant.PRICE_TYPE.PRICE_TYPE_D.equals(priceType)) {
+					if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getMinPriceA().compareTo(h2.getMinPriceA()));
+					} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getMaxPriceD().compareTo(h1.getMaxPriceD()));
+					}
+				}
+			} else if (i == 1) {// 销量
+				if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+					listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getSalesVolume().compareTo(h2.getSalesVolume()));
+				} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+					listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getSalesVolume().compareTo(h1.getSalesVolume()));
+				}
+			} else if (i == 2) {// 类目
+				if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+					listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getCategoryId().compareTo(h2.getCategoryId()));
+				} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+					listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getCategoryId().compareTo(h1.getCategoryId()));
+				}
+			} else if (i == 3) {// 上下架时间
+				if (ProductConstant.UP_OR_DOWN.UP.equals(upOrDown)) {// 上架时间
+					if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getUpTime().compareTo(h2.getUpTime()));
+					} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getUpTime().compareTo(h1.getUpTime()));
+					}
+				} else {// 下架时间
+					if (ProductConstant.STR_ONE.equals(sortArr[i])) {// 1升序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h1.getDownTime().compareTo(h2.getDownTime()));
+					} else if (TransConstant.STR_TWO.equals(sortArr[i])) {// 2降序
+						listData.sort((ProdSelectResultBean h1, ProdSelectResultBean h2) -> h2.getDownTime().compareTo(h1.getDownTime()));
+					}
+				}
+			}
+		}
+	}
