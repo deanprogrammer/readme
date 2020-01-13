@@ -1,0 +1,22 @@
+@Service("contractService")
+public class ContractServiceImpl extends BaseServiceImpl implements ContractService{
+	
+	@Resource(name = "eTradeRestClient")
+	private IRestClient eTradeRestClient;
+	
+	@Resource(name = "ossUtil")
+	private OSSUtil ossUtil;
+
+	@Override
+	public TRD010401OutputBean doGoodsSupplyContract(TRD010401ReqParams reqParams) {
+		TRD010401InputBean inputBean = new TRD010401InputBean();
+		inputBean.setTxCode(AdminConstant.TX_CODE.TRD010401);
+		inputBean.setReqParams(reqParams);
+		TRD010401OutputBean rstBean = eTradeRestClient.post(inputBean, TRD010401OutputBean.class);
+		if (null != rstBean && AdminConstant.BACK_CODE.SUCCESS_CODE.equals(rstBean.getRespCode())) {
+			rstBean.setContractFileUrl(ossUtil.getFileFullPath(rstBean.getContractFileUrl()));
+			return rstBean;
+		}		
+		return null;
+	}
+}
