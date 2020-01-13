@@ -1,0 +1,160 @@
+private void uploadLineBridgeGoodsbillDocument(GoodsBillBean billBean, String uploadUrl, InputStream templateInputStream)
+			throws IOException {
+		ByteArrayOutputStream goodsOutputStream = new ByteArrayOutputStream();
+		InputStream goodsInputStream = null;
+		List<GoodsBillDetailBean> goodsBillDetailList = billBean.getGoodsBillDetailList();
+		List<GoodsBillDetailBean> processingBillDetailList = billBean.getProcessingBillDetailList();
+
+		// 读取原始模板
+		ExcelUtil excelUtil = new ExcelUtil(templateInputStream, 0);
+		XSSFWorkbook workbook = excelUtil.getWorkBook();
+		if (null != goodsBillDetailList && goodsBillDetailList.size() > 0) {
+			excelUtil.switchSheet("清单1号材料设备计价清单");
+			XSSFSheet sheet = excelUtil.getCurrentSheet();
+			// 模板行不够追加行
+			int needAddNum = goodsBillDetailList.size()-1;
+			if (goodsBillDetailList.size() > 1) {
+				sheet.shiftRows(4, 5, needAddNum);
+			}
+			// 渲染数据
+			XSSFRow excelRow = null;
+			int maxCellNum = excelUtil.getMaxCellNum();
+			for (int row = 0; row < goodsBillDetailList.size(); row++) {
+				if (row >= 1) {// 创建追加行和单元格并设置样式
+					XSSFRow newRow = sheet.createRow(row + 3);
+					for (int cell = 0; cell < maxCellNum; cell++) {
+						XSSFCell newCell = newRow.createCell(cell);
+						newCell.setCellStyle(sheet.getRow(3).getCell(cell).getCellStyle());
+					}
+					newRow.setHeight((short) -1);
+				}
+				excelRow = sheet.getRow(row + 3);
+				excelRow.getCell(0).setCellValue(row + 1);
+				excelRow.getCell(1).setCellValue(goodsBillDetailList.get(row).getMaterialCode());
+				excelRow.getCell(2).setCellValue(goodsBillDetailList.get(row).getSkuName());
+				excelRow.getCell(3).setCellValue(goodsBillDetailList.get(row).getModel());
+				excelRow.getCell(4).setCellValue(goodsBillDetailList.get(row).getGoodsUnit());
+				excelRow.getCell(5).setCellValue(goodsBillDetailList.get(row).getBuyCount().doubleValue());
+				excelRow.getCell(6).setCellValue(goodsBillDetailList.get(row).getPreTaxUnitPrice().doubleValue());
+				excelRow.getCell(7)
+						.setCellValue(goodsBillDetailList.get(row).getPreTaxUnitFreightPrice().doubleValue());
+				excelRow.getCell(8)
+						.setCellValue(goodsBillDetailList.get(row).getPreTaxUnitPriceWithFreightPrice().doubleValue());
+				excelRow.getCell(9).setCellValue(goodsBillDetailList.get(row).getPreTaxUnitAmountTotal().doubleValue());
+				excelRow.getCell(10).setCellValue(goodsBillDetailList.get(row).getBrand());
+				excelRow.getCell(11).setCellValue(goodsBillDetailList.get(row).getExplain());
+			}
+			// 合计
+			excelRow = sheet.getRow(goodsBillDetailList.size() + 3);
+			excelRow.getCell(5).setCellValue(billBean.getProductCount().doubleValue());
+			excelRow.getCell(9)
+					.setCellValue(ConverterUtils.bigDecimalToDecimal(billBean.getProductTotal()).doubleValue());
+			//调价信息
+			if(null != billBean.getModifyPriceInfo()) {
+				List<String> modifyPriceInfoParagraph= new ArrayList<String>();
+				int num = goodsBillDetailList.size() + 5;
+				for (String feed : TransConstant.LINE_FEED_LIST) {
+					billBean.setModifyPriceInfo(billBean.getModifyPriceInfo().replace(feed, TransConstant.LINE_FEED));
+				}
+				String[] modifyPriceInfo=billBean.getModifyPriceInfo().split(TransConstant.LINE_FEED);
+				for (String modifyPrice : modifyPriceInfo) {
+					getModifyPriceInfoParagraph(modifyPrice,modifyPriceInfoParagraph);//组装调价信息行
+				}
+				for(int i=0;i<modifyPriceInfoParagraph.size();i++) {
+					excelUtil.setString(num + i, 1, modifyPriceInfoParagraph.get(i));
+				}
+				workbook.setPrintArea(2, 0, 11, 0, num + modifyPriceInfoParagraph.size() - 1);
+				
+			}
+		}
+
+		if (null != processingBillDetailList && processingBillDetailList.size() > 0) {
+			excelUtil.switchSheet("清单2号材料加工费清单");
+			XSSFSheet sheet = excelUtil.getCurrentSheet();
+			// 模板行不够追加行
+			int needAddNum = processingBillDetailList.size() - 1;
+			if (processingBillDetailList.size() > 1) {
+				sheet.shiftRows(4, 4, needAddNum);
+			}
+			// 渲染数据
+			XSSFRow excelRow = null;
+			int maxCellNum = excelUtil.getMaxCellNum();
+			for (int row = 0; row < processingBillDetailList.size(); row++) {
+				if (row >= 1) {// 创建追加行和单元格并设置样式
+					XSSFRow newRow = sheet.createRow(row + 3);
+					for (int cell = 0; cell < maxCellNum; cell++) {
+						XSSFCell newCell = newRow.createCell(cell);
+						newCell.setCellStyle(sheet.getRow(3).getCell(cell).getCellStyle());
+					}
+				}
+				excelRow = sheet.getRow(row + 3);
+				excelRow.getCell(0).setCellValue(row + 1);
+				excelRow.getCell(1).setCellValue(processingBillDetailList.get(row).getSkuName());
+				excelRow.getCell(2).setCellValue(processingBillDetailList.get(row).getGoodsUnit());
+				excelRow.getCell(3).setCellValue(processingBillDetailList.get(row).getBuyCount().doubleValue());
+				excelRow.getCell(4).setCellValue(processingBillDetailList.get(row).getPreTaxUnitPrice().doubleValue());
+				excelRow.getCell(5)
+						.setCellValue(processingBillDetailList.get(row).getPreTaxUnitAmountTotal().doubleValue());
+				excelRow.getCell(6).setCellValue(processingBillDetailList.get(row).getExplain());
+			}
+			// 合计
+			excelRow = sheet.getRow(processingBillDetailList.size() + 3);
+			excelRow.getCell(3).setCellValue(billBean.getProcessingCount().doubleValue());
+			excelRow.getCell(5)
+					.setCellValue(ConverterUtils.bigDecimalToDecimal(billBean.getProcessingTotal()).doubleValue());
+		}
+
+		excelUtil.switchSheet("报价汇总表");
+		excelUtil.setString(1, 0, "工程名称:" + billBean.getContractName());
+		excelUtil.setNumeric(3, 2, billBean.getProductTotal().doubleValue());
+		excelUtil.setNumeric(4, 2, billBean.getProcessingTotal().doubleValue());
+		excelUtil.setNumeric(5, 2, billBean.getTaxUnitAmountTotal().doubleValue());
+		excelUtil.setString(6, 2, billBean.getTaxRate().stripTrailingZeros().toPlainString() + TransConstant.PER_CENT);
+		excelUtil.setNumeric(7, 2, billBean.getContractTaxAmount().doubleValue());
+		excelUtil.setNumeric(8, 2, billBean.getContractAmountTotalWithTax().doubleValue());
+		// 上传生成的excell到oss
+		workbook.write(goodsOutputStream);
+		byte[] content = goodsOutputStream.toByteArray();
+		goodsInputStream = new ByteArrayInputStream(content);
+		ossUtil.uploadAdmin(uploadUrl, goodsInputStream);
+		if (null != templateInputStream) {
+			templateInputStream.close();
+		}
+		if (null != goodsOutputStream) {
+			goodsOutputStream.close();
+		}
+		if (null != goodsInputStream) {
+			goodsInputStream.close();
+		}
+
+	}
+  
+  
+  
+  
+  
+  
+  /**组装调价信息行*/
+	private void getModifyPriceInfoParagraph(String modifyPrice, List<String> modifyPriceInfoParagraph) {
+		int maxLength = TransConstant.GOODLIST_CELL_MAXLENGTH;
+		int modifyPriceLength = modifyPrice.length();
+		if (modifyPriceLength>maxLength+1) {
+			String lengthInterception = modifyPrice.substring(0, maxLength);
+			int interceptionPositionIndex = 0;//截取的位置
+			for (String interceptionMark : TransConstant.INTERCEPTION_MARK_LIST) {
+				int markIndex = lengthInterception.lastIndexOf(interceptionMark);
+				interceptionPositionIndex = markIndex > interceptionPositionIndex ? markIndex : interceptionPositionIndex;
+			}
+			if (interceptionPositionIndex <= 0) {
+				interceptionPositionIndex = maxLength;
+			}else {
+				interceptionPositionIndex = interceptionPositionIndex+1;
+			}
+			String nowModifyPrice = modifyPrice.substring(0,interceptionPositionIndex);
+			String nextModifyPrice = modifyPrice.substring(interceptionPositionIndex);
+			modifyPriceInfoParagraph.add(nowModifyPrice);
+			getModifyPriceInfoParagraph(nextModifyPrice,modifyPriceInfoParagraph);
+		}else {
+			modifyPriceInfoParagraph.add(modifyPrice);
+		}
+	}
