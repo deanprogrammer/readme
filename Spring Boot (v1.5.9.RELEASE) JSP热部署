@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: etrade-admin
+  cloud: 
+    config: 
+      uri: http://localhost:10002/
+logging:
+  config: http://localhost:10002/etrade-admin/default/master/logback-spring.xml
+server:
+  port: 8989
+  jsp-servlet:
+    init-parameters:
+      development: true
+      
