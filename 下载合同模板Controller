@@ -1,0 +1,17 @@
+@Controller
+@RequestMapping("/order")
+public class PurchaserOrderController extends  BaseController {
+    @ResponseBody
+	@RequestMapping("/getContractTemplate")
+	public String getContractTemplate(HttpServletRequest request, HttpServletResponse response) {
+		TRD010401ReqParams reqParams = new TRD010401ReqParams();
+		reqParams.setOrderNo(request.getParameter("orderNo"));
+		reqParams.setBs(request.getParameter("temBS"));
+		String data= "";
+			TRD010401OutputBean rstBean = contractService.doGoodsSupplyContract(reqParams);
+			if (null != rstBean) {
+				data = JSON.toJSONString(rstBean);
+			}			
+		return data;
+	}
+}
