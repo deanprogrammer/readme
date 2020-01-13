@@ -1,0 +1,12 @@
+1.//按合同编号倒序排列
+List<ContractInfo> contractList=contractList.sort((ContractInfo c1, ContractInfo c2) -> c2.getOrderNo().compareTo(c1.getOrderNo()));
+2.//过滤
+List<OrderConfirmRstBean> rstBeanList = rstBeans.stream().filter(p -> p.getResult().equals(TransConstant.SUC)).collect(Collectors.toList());
+3.//去重
+acctIdList = acctIdList.stream().distinct().collect(Collectors.toList());
+4.//提取bean里面的某个字段值
+List<String> corpIds = acCorpInfoList.stream().map(AcCorpInfo :: getCorpId).distinct().collect(Collectors.toList());
+5.//List转Map
+Map<String, String> findMap = findExistingAttention.stream().collect(Collectors.toMap(AcRiskAttention::getCustId, AcRiskAttention::getAttentionInfoNo));
+6.//List<Map<String, Object>> ResultData
+List<String> esIdList esIdList = outputBean.getResultData().stream().map(p->String.valueOf(p.get("esId"))).collect(Collectors.toList());
