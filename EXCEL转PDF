@@ -1,0 +1,41 @@
+private String doExcellToPdf(TdOrder order,TdDocumentsInfo tdDocumentsInfo,String bs) {
+		String uploadFileUrl = null;
+		try {
+			InputStream inputStream = ossUtil.downloadAdmin(tdDocumentsInfo.getDocumentUrl());
+			byte[] fileByte = IOUtils.toByteArray(inputStream);
+			ExcelUtil excelUtil = new ExcelUtil(new ByteArrayInputStream(fileByte), 0);
+			XSSFWorkbook workbook = excelUtil.getWorkBook();
+			ByteArrayOutputStream prodOutputStream = new ByteArrayOutputStream();
+			for (int i = 0; i < workbook.getNumberOfSheets() - 1; i++) {
+				XSSFSheet sheet = workbook.getSheetAt(i);// 获取sheet
+//				int maxRowNum = sheet.getLastRowNum();
+//				XSSFRow row = sheet.getRow(maxRowNum);
+//				row = sheet.createRow((short) (sheet.getLastRowNum() + 1)); // 在现有行号后追加数据
+//				row.createCell(1).setCellValue("合制(盖章)");
+//				workbook.setPrintArea(i, 0, sheet.getRow(2).getLastCellNum() - 1, 0, maxRowNum + 1);
+				Footer footer = sheet.getFooter();//页脚
+				footer.setRight(HSSFFooter.font("宋体", "")+HSSFFooter.fontSize((short)10)+"合制(盖章)");
+				sheet.setMargin(Sheet.FooterMargin, 1.3D);
+			}
+			workbook.write(prodOutputStream);
+			byte[] filePdf = ExcelToPdf.excelToPdf(prodOutputStream.toByteArray());
+			InputStream pdfInputStream = new ByteArrayInputStream(filePdf);
+			
+			String name = "货物清单";
+			String newName = "";
+			if(TransConstant.BS.B.equals(bs)) {
+				newName = "货物清单(供应合同)";
+			}else {
+				newName = "货物清单(采购合同)";
+			}
+			String doucmentName = tdDocumentsInfo.getDocumentName().replace(name, newName).replace(FILE_TYPE.XLSX, FILE_TYPE.PDF).replace("：", " ");
+			StringBuilder filePathBuilder = new StringBuilder(); 
+			filePathBuilder.append(tdDocumentsInfo.getDocumentUrl().substring(0, tdDocumentsInfo.getDocumentUrl().lastIndexOf("/")+1)).append(doucmentName);
+			String filePath = StringUtils.removeStart(filePathBuilder.toString(), "upload/");
+			uploadFileUrl = ossUtil.uploadAdmin(filePath, pdfInputStream);
+		} catch (Exception e) {
+			logger.error("货物清单excel转pdf异常:", e);
+			throw new CommonBusinessException(TransMessageEnum.TRANS0323);
+		}
+		return uploadFileUrl;
+	}
