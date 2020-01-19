@@ -14,6 +14,10 @@ private String doExcellToPdf(TdOrder order,TdDocumentsInfo tdDocumentsInfo,Strin
 //				row = sheet.createRow((short) (sheet.getLastRowNum() + 1)); // 在现有行号后追加数据
 //				row.createCell(1).setCellValue("合制(盖章)");
 //				workbook.setPrintArea(i, 0, sheet.getRow(2).getLastCellNum() - 1, 0, maxRowNum + 1);
+//XSSFFont font = workbook.createFont();设置字体颜色
+//				font.setColor(HSSFColor.WHITE.index);
+//				XSSFRichTextString ts= row.getCell(1).getRichStringCellValue();
+//				ts.applyFont(font);
 if (i == 0) {//删除sheet中部分数据
 					for (int j = 0; j < sheet.getLastRowNum()+1; j++) {
 						Row row = sheet.getRow(j);
