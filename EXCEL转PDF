@@ -5,6 +5,7 @@ private String doExcellToPdf(TdOrder order,TdDocumentsInfo tdDocumentsInfo,Strin
 			byte[] fileByte = IOUtils.toByteArray(inputStream);
 			ExcelUtil excelUtil = new ExcelUtil(new ByteArrayInputStream(fileByte), 0);
 			XSSFWorkbook workbook = excelUtil.getWorkBook();
+			workbook.removeSheetAt(workbook.getSheetIndex("清单填报注意事项"));
 			ByteArrayOutputStream prodOutputStream = new ByteArrayOutputStream();
 			for (int i = 0; i < workbook.getNumberOfSheets() - 1; i++) {
 				XSSFSheet sheet = workbook.getSheetAt(i);// 获取sheet
@@ -13,6 +14,18 @@ private String doExcellToPdf(TdOrder order,TdDocumentsInfo tdDocumentsInfo,Strin
 //				row = sheet.createRow((short) (sheet.getLastRowNum() + 1)); // 在现有行号后追加数据
 //				row.createCell(1).setCellValue("合制(盖章)");
 //				workbook.setPrintArea(i, 0, sheet.getRow(2).getLastCellNum() - 1, 0, maxRowNum + 1);
+if (i == 0) {//删除sheet中部分数据
+					for (int j = 0; j < sheet.getLastRowNum()+1; j++) {
+						Row row = sheet.getRow(j);
+						if (null != row && null == row.getCell(0)) {
+							for (int w = 0; w < row.getLastCellNum(); w++) {
+			            		if (null != row.getCell(w) && StringUtil.isNotBlank(row.getCell(w).getStringCellValue())) {
+			            			row.getCell(w).setCellValue("");
+			            		}
+			            	}
+						}
+					}
+				}
 				Footer footer = sheet.getFooter();//页脚
 				footer.setRight(HSSFFooter.font("宋体", "")+HSSFFooter.fontSize((short)10)+"合制(盖章)");
 				sheet.setMargin(Sheet.FooterMargin, 1.3D);
