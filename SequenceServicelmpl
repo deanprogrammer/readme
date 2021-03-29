@@ -1,0 +1,47 @@
+@Autowired(required = false)
+	@Qualifier("incrementers")
+	private Map<String, DataFieldMaxValueIncrementer> incrementers;
+  protected String getSeqFlowNo(String head, String lockName, int size) {
+		StringBuilder sb = new StringBuilder(32);
+		if (head != null) {
+			sb.append(head);
+		}
+
+		if (sb.length() > 14) {
+			this.logger.info("不符合采番规则(业务描述头的长度+业务日期的长度不能大于14位)，不做后续采番动作.[head:" + head + "]");
+			throw new ProcessException(head + "序列号获取失败。");
+		} else {
+			String seqno = "";
+			int i = 0;
+
+			while (i < 5) {
+				try {
+					DataFieldMaxValueIncrementer e = (DataFieldMaxValueIncrementer) this.incrementers.get(head);
+					if (e instanceof CommonMySQLMaxValueIncrementer && size > 1) {
+						seqno = ((CommonMySQLMaxValueIncrementer) e).nextStringValue(size);
+						break;
+					}
+
+					seqno = e.nextStringValue();
+					break;
+				} catch (Exception arg9) {
+					this.logger.debug("採番异常", arg9);
+
+					try {
+						Thread.sleep(100L);
+					} catch (InterruptedException arg8) {
+						this.logger.debug("採番休眠异常", arg8);
+					}
+
+					++i;
+				}
+			}
+
+			if (StringUtil.isBlank(seqno)) {
+				throw new CommonBusinessException(MessageEnum.S1001);
+			} else {
+				sb.append(seqno);
+				return sb.toString();
+			}
+		}
+	}
